@@ -13,18 +13,26 @@ namespace SampleBusinessCode
             bool done = lenghtyStuff.DoLenghtyOperation(info);
         }
 
-        public async Task DoItInAsync(InfoObject info)
+        public async Task<bool> DoItInAsync(InfoObject info, bool configureAwait = false)
         {
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"TestCase: {nameof(DoItInAsync)}", true);
-            var task = lenghtyStuff.DoLenghtyOperationAsync(info);
+            var task = lenghtyStuff.DoLenghtyOperationAsync(info, configureAwait);
 
             // u can do something here...
 
             // but now need result form task
-            await task;
-            bool result = task.Result;
+            if (configureAwait)
+            {
+                await task.ConfigureAwait(false);
+            }
+            else
+            {
+                await task;
+            }
+
+            return task.Result;
         }
 
         public async Task DoItInAsyncInNewThread(InfoObject info)
@@ -49,10 +57,17 @@ namespace SampleBusinessCode
 
             return true;
         }
-        public async Task<bool> DoLenghtyOperationAsync(InfoObject info)
+        public async Task<bool> DoLenghtyOperationAsync(InfoObject info, bool configureAwait = false)
         {
             info.Log($"In {nameof(DoLenghtyOperationAsync)}, before Sleep");
-            await Task.Delay(info.MillisToSleep);
+            if (configureAwait)
+            {
+                await Task.Delay(info.MillisToSleep).ConfigureAwait(false);
+            }
+            else
+            {
+                await Task.Delay(info.MillisToSleep);
+            }
             info.Log($"In {nameof(DoLenghtyOperationAsync)}, after Sleep");
 
             return true;
