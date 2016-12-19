@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using SampleBusinessCode;
 using static System.Console;
 
@@ -14,16 +15,34 @@ namespace TestConsole
 
         static void Main()
         {
-            var info = new InfoObject();
+            DoItInSync();
+            DoItInAsync();
+            DoItInAsyncInNewThread();
+            Pause();
+        }
+
+        static void DoItInSync()
+        {
+            var info = new InfoObject { MillisToSleep = 3000 };
             var lenghtyStuff = new LengthyStuff();
 
-            info.Log("Before LengthyOperation...");
+            lenghtyStuff.DoItInSync(info);
+        }
 
-            bool done = lenghtyStuff.DoLenghtyOperation(info);
+        static async Task DoItInAsync()
+        {
+            var info = new InfoObject { MillisToSleep = 3000 };
+            var lenghtyStuff = new LengthyStuff();
 
-            info.Log("After LengthyOperation...");
+            await lenghtyStuff.DoItInAsync(info);
+        }
 
-            Pause();
+        static async Task DoItInAsyncInNewThread()
+        {
+            var info = new InfoObject { MillisToSleep = 3000 };
+            var lenghtyStuff = new LengthyStuff();
+
+            await lenghtyStuff.DoItInAsyncInNewThread(info);
         }
     }
 }

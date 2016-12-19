@@ -11,11 +11,10 @@ namespace SampleBusinessCode
 
         public int MillisToSleep { get; set; } = 3000;
 
-        public void Log(string info)
+        public void Log(string info, bool startWithNewline = false)
         {
             LogInfo logger = Logger ?? Console.WriteLine;
-
-            logger($"<{DateTime.Now:T}> <ThreadId: {Thread.CurrentThread.ManagedThreadId}>: {info}");
+            logger((startWithNewline ? Environment.NewLine : string.Empty) + $"<{DateTime.Now:T}> <ThreadId: {Thread.CurrentThread.ManagedThreadId}>: {info}");
         }
     }
 }
