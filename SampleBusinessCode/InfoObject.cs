@@ -11,6 +11,10 @@ namespace SampleBusinessCode
 
         public int MillisToSleep { get; set; } = 3000;
 
+        public int IterationsToSimulateWork { get; set; } = 10;
+
+        public bool ThrowIfCancellingRequesting { get; set; } = false;
+
         public string TestCase { get; set; } = string.Empty;
 
         public void Log(string info, bool startWithNewline = false)

@@ -31,12 +31,13 @@
             this.btnRunTest = new System.Windows.Forms.Button();
             this.tbInfo = new System.Windows.Forms.TextBox();
             this.btnExit = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnRunTest
             // 
             this.btnRunTest.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnRunTest.Location = new System.Drawing.Point(545, 586);
+            this.btnRunTest.Location = new System.Drawing.Point(436, 586);
             this.btnRunTest.Name = "btnRunTest";
             this.btnRunTest.Size = new System.Drawing.Size(169, 62);
             this.btnRunTest.TabIndex = 1;
@@ -69,6 +70,18 @@
             this.btnExit.UseVisualStyleBackColor = true;
             this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
+            // btnCancel
+            // 
+            this.btnCancel.Font = new System.Drawing.Font("Arial", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnCancel.Location = new System.Drawing.Point(647, 586);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(169, 62);
+            this.btnCancel.TabIndex = 1;
+            this.btnCancel.Text = "&Cancel Test";
+            this.btnCancel.UseCompatibleTextRendering = true;
+            this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            // 
             // frmMain
             // 
             this.AcceptButton = this.btnRunTest;
@@ -78,6 +91,7 @@
             this.ClientSize = new System.Drawing.Size(1328, 680);
             this.Controls.Add(this.tbInfo);
             this.Controls.Add(this.btnExit);
+            this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnRunTest);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
@@ -93,6 +107,7 @@
         private System.Windows.Forms.Button btnRunTest;
         private System.Windows.Forms.TextBox tbInfo;
         private System.Windows.Forms.Button btnExit;
+        private System.Windows.Forms.Button btnCancel;
     }
 }
 
