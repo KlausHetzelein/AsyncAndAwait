@@ -44,31 +44,27 @@ namespace WinFormsClient
             var info = new InfoObject { Logger = LogIt, ThrowIfCancellingRequesting = true }; //, TestCase = "CancellingLongRunningTask" };
             var lenghtyStuff = new LengthyStuff();
 
+            // cancel the task right away, will throw TaskCanceledException, if ct is provided for Task and not only for Method
+            //_cts.Cancel();
+
             try
             {
-                info.Log($"In {currentMethodName} before starting DoLenghty...");
-                task = lenghtyStuff.DoLenghtyOperationAsyncWithCancellationToken(info, _cts.Token);
+                info.Log($"In {currentMethodName} before starting DoLengthy...");
+                //task = lenghtyStuff.DoLenghtyOperationAsyncWithCancellationToken(info, _cts.Token);
+                //task = Task.Run(async () => await lenghtyStuff.DoLenghtyOperationAsyncWithCancellationToken(info, _cts.Token), _cts.Token);
+                task = lenghtyStuff.DoLenghtyOpAsyncWithCtInNewThread(info, _cts.Token);
                 result = await task;
-                info.Log($"In {currentMethodName} after awaiting DoLenghty...");
+                info.Log($"In {currentMethodName} after awaiting DoLengthy...");
             }
-            catch (TaskCanceledException tce)
-            {
-                info.Log($"In {currentMethodName} received TaskCanceledException, return false");
-                result = false;
-            }
-            catch (OperationCanceledException oce)
+            // unnecessary, cos TaskCanceledException is derived from OperationCanceledExceoption
+            //catch (TaskCanceledException)
+            //{
+            //    info.Log($"In {currentMethodName} received TaskCanceledException, return false");
+            //    result = false;
+            //}
+            catch (OperationCanceledException)
             {
                 info.Log($"In {currentMethodName} received OperationCanceledException, return false");
-                result = false;
-            }
-            catch (AggregateException ace)
-            {
-                info.Log($"In {currentMethodName} received AggregateException, return false");
-                result = false;
-            }
-            catch (Exception ex)
-            {
-                info.Log($"In {currentMethodName} received Exception, return false: {ex.Message}");
                 result = false;
             }
 
@@ -147,6 +143,7 @@ namespace WinFormsClient
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
+            btnCancel.Enabled = false;
             if (null == _cts || _cts.IsCancellationRequested)
             {
                 LogIt($"Cancelling requested..., but no CTS or already requested...");
