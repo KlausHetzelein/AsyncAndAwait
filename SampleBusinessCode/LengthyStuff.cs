@@ -26,7 +26,7 @@ namespace SampleBusinessCode
             var task = lenghtyStuff.DoLenghtyOperationAsync(info, configureAwait);
             info.Log($"TestCase: {currentMethodName} after calling DoLengthyOperation...");
 
-            // u can do something here...
+            // perhaps you can do something before you need result from async-method
 
             // but now need result form task
             if (configureAwait)
@@ -47,9 +47,7 @@ namespace SampleBusinessCode
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"TestCase: {currentMethodName} before DoLenghty", true);
-            var task = Task.Run<bool>(() => lenghtyStuff.DoLenghtyOperationAsync(info));
-
-            // u can do something here...
+            var task = Task.Run(() => lenghtyStuff.DoLenghtyOperationAsync(info));
 
             // but now need result form task
             info.Log($"TestCase: {currentMethodName} after DoLenghty, but before await");
@@ -139,37 +137,21 @@ namespace SampleBusinessCode
         public async Task<bool> DoLenghtyOpAsyncWithCtInNewThread(InfoObject info, CancellationToken ct)
         {
             string currentMethodName = nameof(DoLenghtyOpAsyncWithCtInNewThread);
+            Task<bool> task = null;
 
             info.Log($"In {currentMethodName}, before starting Task.Run");
-
-            // bei ThrowIf muss die Exception im delegate für Task.Run erledigt werden... oder auch nicht
-            var task = Task.Run(async () =>
+            try
             {
-                Task<bool> innerTask = null;
-                bool result;
+                task = Task.Run(() => DoLenghtyOperationAsyncWithCancellationToken(info, ct), ct);
+                await task;
+            }
+            catch (OperationCanceledException)
+            {
+                info.Log($"In {currentMethodName} received OperationCanceledException, Task.State <{task?.Status}>, rethrow");
+                throw;
+            }
 
-                try
-                {
-                    info.Log($"In {currentMethodName} before starting DoLengthy in real ...");
-                    innerTask = DoLenghtyOperationAsyncWithCancellationToken(info, ct);
-                    result = await innerTask;
-                    info.Log($"In {currentMethodName} after awaiting DoLengthy in real...");
-                }
-                catch (OperationCanceledException)
-                {
-                    info.Log($"In {currentMethodName} received OperationCanceledException, inner Task.State <{innerTask?.Status}>, rethrow");
-                    throw;
-                }
-
-                info.Log($"In {currentMethodName} inner Task.State <{innerTask?.Status}>, Result: <{result}>");
-                return result;
-            }, ct);
-
-            info.Log($"In {currentMethodName}, after outer Task.Run");
-
-            await task;
-            info.Log($"In {currentMethodName} after await outer Task");
-            info.Log($"In {currentMethodName} outer Task.State <{task?.Status}>, Result: <{task.Result}>");
+            info.Log($"In {currentMethodName} Task.State <{task?.Status}>, Result: <{task.Result}>");
             return task.Result;
         }
     }

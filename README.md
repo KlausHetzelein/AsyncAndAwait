@@ -1,6 +1,7 @@
 # Infos about Project AsyncAndAwait
 
 * Async and await in some kind unblocks the UI-thread
+* Async and await are contagious, you must use it consistently
 * it doesn't create a new thread
 * the asynchrosity is achieved by using the MsgQ and resuming a method where it returned cos of await
 * not awaiting an asynchronous method means your code runs on without waiting for method(result)
@@ -10,8 +11,8 @@
 * when working with CancellationToken
   * and just with async and await without a Task, then ThrowIf... throws OperationCanceledException
   * TaskCancelledException is not thrown <but the BaseClass of OperationCanceled...>
-  * that is only thrown, when doing with e.g. Task.Run(xx, ct)
-  * just catch(OperationCanceledException
+  * that is only thrown, when doing with e.g. Task.Run(xx, ct) and Task is cancelled before even startet
+  * just catch(OperationCanceledException)
   * if you just leave the method with some default-return-value and not throwing, the state of task etc. is RanToCompletion)
 * For Cancelling always throw ct.ThrowIf *after* cleaning-up  
-  * and catch(OperationCanceledException)    
+  * and catch(OperationCanceledException) and rethrow in inner methods   
