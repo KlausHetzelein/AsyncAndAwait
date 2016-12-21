@@ -17,7 +17,7 @@ namespace WinFormsClient
 
         private CancellationTokenSource _cts;
         private delegate Task TestMethod();
-        private bool _addSeparator = true;
+        private bool _addSeparator = false;
 
         private class TestCase
         {
@@ -38,6 +38,7 @@ namespace WinFormsClient
             _testCases.Add(new TestCase { Description = "Async No Await - Will Block", Method = DoItWithAsyncNoAwaitButWaitMayBlock });
             _testCases.Add(new TestCase { Description = "Async No Await, but ConfigureAwait False", Method = DoItWithAsyncNoAwaitButConfigureAwaitFalse });
             _testCases.Add(new TestCase { Description = "Async with new Thread", Method = DoItInAsyncInNewThread });
+            _testCases.Add(new TestCase { Description = "Async with new Thread, but ConfigureAwait False", Method = DoItInAsyncInNewThreadButConfigureAwaitFalse });
             _testCases.Add(new TestCase { Description = "Cancelable longrunning Async", Method = HandleLongRunningTask, VariantInTest = TV_LONG_RUNNING_JUST_AWAIT, SimulatedWorkInMillis = 2000 });
             _testCases.Add(new TestCase { Description = "Cancelable longrunning new Thread", Method = HandleLongRunningTask, VariantInTest = TV_LONG_RUNNING_AWAIT_AND_TASK_RUN, SimulatedWorkInMillis = 2000 });
             _testCases.Add(new TestCase { Description = "Cancelable longrunning new Thread and exc-handling", Method = HandleLongRunningTask, VariantInTest = TV_LONG_RUNNING_AWAIT_AND_TASK_RUN_WITH_EXCEPTION_HANDLING, SimulatedWorkInMillis = 2000 });
@@ -78,7 +79,7 @@ namespace WinFormsClient
         {
             if (!cbClearList.Checked && _addSeparator)
             {
-                LogIt(new StringBuilder().Append('-', 100).ToString());
+                LogIt(new StringBuilder().Append('-', 160).ToString());
                 _addSeparator = false;
             }
         }
@@ -160,7 +161,7 @@ namespace WinFormsClient
 
         private async Task<bool> HandleLongRunningTask()
         {
-            string currentMethodName = "HandleLongRunningTask";
+            string currentMethodName = nameof(HandleLongRunningTask);
             Task<bool> task = null;
             bool result = false;
             _cts = new CancellationTokenSource();
@@ -181,16 +182,16 @@ namespace WinFormsClient
                 info.Log($"In {currentMethodName} before starting DoLengthy...");
                 if (testVariant == TV_LONG_RUNNING_JUST_AWAIT)
                 {
-                    task = lenghtyStuff.DoLenghtyOperationAsyncWithCancellationToken(info, _cts.Token);
+                    task = lenghtyStuff.DoLengthyOperationAsyncWithCancellationToken(info, _cts.Token);
                 }
                 else if (testVariant == TV_LONG_RUNNING_AWAIT_AND_TASK_RUN)
                 {
-                    task = Task.Run(async () => await lenghtyStuff.DoLenghtyOperationAsyncWithCancellationToken(info, _cts.Token), _cts.Token);
+                    task = Task.Run(async () => await lenghtyStuff.DoLengthyOperationAsyncWithCancellationToken(info, _cts.Token), _cts.Token);
 
                 }
                 else if (testVariant == TV_LONG_RUNNING_AWAIT_AND_TASK_RUN_WITH_EXCEPTION_HANDLING)
                 {
-                    task = lenghtyStuff.DoLenghtyOpAsyncWithCtInNewThread(info, _cts.Token);
+                    task = lenghtyStuff.DoLengthyOpAsyncWithCtInNewThread(info, _cts.Token);
                 }
 
                 if (null == task)
@@ -249,10 +250,10 @@ namespace WinFormsClient
 
         private async Task DoItWithAsyncNoAwaitButConfigureAwaitFalse()
         {
-            var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "NoAwaitButConfigureAwait" };
+            var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "NoAwaitButConfigureAwaitFalse" };
             var lenghtyStuff = new LengthyStuff();
 
-            lenghtyStuff.DoItInAsync(info, true).Wait();
+            lenghtyStuff.DoItInAsync(info, false).Wait();
         }
 
         private async Task DoItInAsyncInNewThread()
@@ -261,6 +262,14 @@ namespace WinFormsClient
             var lenghtyStuff = new LengthyStuff();
 
             await lenghtyStuff.DoItInAsyncInNewThread(info);
+        }
+
+        private async Task DoItInAsyncInNewThreadButConfigureAwaitFalse()
+        {
+            var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "AsyncInNewThreadButConfigureAwaitFalse" };
+            var lenghtyStuff = new LengthyStuff();
+
+            await lenghtyStuff.DoItInAsyncInNewThread(info, false).ConfigureAwait(false);
         }
     }
 }

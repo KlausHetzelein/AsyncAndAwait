@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using SampleBusinessCode;
 using static System.Console;
@@ -40,6 +40,9 @@ namespace TestConsole
             DoItInAsyncInNewThread().Wait();
             AppendSeparator();
 
+            HandleLongRunningTask().Wait();
+            AppendSeparator();
+
             Pause();
         }
 
@@ -47,7 +50,7 @@ namespace TestConsole
         {
             string currentMethodName = nameof(DoItInSync);
 
-            var info = new InfoObject { MillisToSleep = 3000, TestCase = "Sync" };
+            var info = new InfoObject { MillisToSleep = 1234, TestCase = "Sync" };
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"Start of <{currentMethodName}>");
@@ -58,7 +61,7 @@ namespace TestConsole
         static async Task DoItWithAsyncAndAwait()
         {
             string currentMethodName = nameof(DoItWithAsyncAndAwait);
-            var info = new InfoObject { MillisToSleep = 3000, TestCase = "AsyncAndAwait" };
+            var info = new InfoObject { MillisToSleep = 1357, TestCase = "AsyncAndAwait" };
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"Start of <{currentMethodName}>");
@@ -68,7 +71,7 @@ namespace TestConsole
         static async Task DoItWithAsyncNoAwaitButWaitMayBlock()
         {
             string currentMethodName = nameof(DoItWithAsyncNoAwaitButWaitMayBlock);
-            var info = new InfoObject { MillisToSleep = 3000, TestCase = "AsyncNoAwaitMayBlock" };
+            var info = new InfoObject { MillisToSleep = 1246, TestCase = "AsyncNoAwaitMayBlock" };
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"Start of <{currentMethodName}>");
@@ -79,7 +82,7 @@ namespace TestConsole
         static async Task DoItWithAsyncNoAwaitButConfigureAwaitFalse()
         {
             string currentMethodName = nameof(DoItWithAsyncNoAwaitButConfigureAwaitFalse);
-            var info = new InfoObject { MillisToSleep = 3000, TestCase = "AsyncNoAwaitButConfigureAwaitFalse" };
+            var info = new InfoObject { MillisToSleep = 1333, TestCase = "AsyncNoAwaitButConfigureAwaitFalse" };
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"Start of <{currentMethodName}>");
@@ -91,12 +94,47 @@ namespace TestConsole
         static async Task DoItInAsyncInNewThread()
         {
             string currentMethodName = nameof(DoItInAsyncInNewThread);
-            var info = new InfoObject { MillisToSleep = 3000, TestCase = "AsyncThread" };
+            var info = new InfoObject { MillisToSleep = 1377, TestCase = "AsyncThread" };
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"Start of <{currentMethodName}>");
             await lenghtyStuff.DoItInAsyncInNewThread(info);
             info.Log($"End of <{currentMethodName}>");
+        }
+
+        static async Task HandleLongRunningTask()
+        {
+            string currentMethodName = nameof(HandleLongRunningTask);
+            Task<bool> task = null;
+            bool result = false;
+            var _cts = new CancellationTokenSource();
+            var info = new InfoObject { ThrowIfCancellingRequesting = true, TestCase = "CancellationToken", MillisToSleep = 2112 };
+            var lenghtyStuff = new LengthyStuff();
+
+            info.IncreaseIndentationLevel();
+
+            // cancel the task after some time
+            _cts.CancelAfter(4567);
+
+            try
+            {
+                info.Log($"In {currentMethodName} before starting DoLengthy...");
+                // there is really not much difference
+                //task = lenghtyStuff.DoLengthyOperationAsyncWithCancellationToken(info, _cts.Token);
+                //task = Task.Run(async () => await lenghtyStuff.DoLengthyOperationAsyncWithCancellationToken(info, _cts.Token), _cts.Token);
+                task = lenghtyStuff.DoLengthyOpAsyncWithCtInNewThread(info, _cts.Token);
+
+                result = await task;
+                info.Log($"In {currentMethodName} after awaiting DoLengthy...");
+            }
+            catch (OperationCanceledException)
+            {
+                info.Log($"In {currentMethodName} received OperationCanceledException, return false");
+                result = false;
+            }
+
+            info.Log($"In {currentMethodName} Task.State <{task?.Status}>, Result: <{result}>");
+            info.DecreaseIndentationLevel();
         }
     }
 }
