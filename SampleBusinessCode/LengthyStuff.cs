@@ -48,10 +48,10 @@ namespace SampleBusinessCode
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"Begin of {currentMethodName} before DoLengthy-Async");
-            var task = Task.Run(() => lenghtyStuff.DoLengthyOperationAsync(info, configureAwait));
+            var task = Task.Run(async() => await lenghtyStuff.DoLengthyOperationAsync(info, configureAwait)).ConfigureAwait(configureAwait);
 
             info.Log($"In {currentMethodName} after DoLengthy, but before await");
-            bool result = await task.ConfigureAwait(configureAwait);
+            bool result = await task;
             info.Log($"End of {currentMethodName} after awaiting of DoLengthy-Async");
 
             info.DecreaseIndentationLevel();
@@ -136,9 +136,8 @@ namespace SampleBusinessCode
             string currentMethodName = nameof(DoLengthyOperationAsync);
 
             info.Log($"in {currentMethodName}, before awaiting Task.Delay");
-            var task = Task.Delay(info.MillisToSleep);
             info.DecreaseIndentationLevel();
-            await task.ConfigureAwait(configureAwait);
+            await Task.Delay(info.MillisToSleep).ConfigureAwait(configureAwait);
             info.IncreaseIndentationLevel();
             info.Log($"in {currentMethodName}, after awaiting Task.Delay");
 

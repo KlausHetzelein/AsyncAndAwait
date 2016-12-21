@@ -258,18 +258,34 @@ namespace WinFormsClient
 
         private async Task DoItInAsyncInNewThread()
         {
+            string currentMethodName = nameof(DoItInAsyncInNewThread);
             var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "AsyncInNewThread" };
             var lenghtyStuff = new LengthyStuff();
 
-            await lenghtyStuff.DoItInAsyncInNewThread(info);
+            info.IncreaseIndentationLevel();
+
+            info.Log($"Begin of {currentMethodName} before DoLengthy-Async");
+            var task = Task.Run(() => lenghtyStuff.DoItInAsync(info));
+            info.Log($"In {currentMethodName} before awaiting DoLengthy-Async");
+            await task;
+            info.Log($"End of {currentMethodName} after awaiting DoLengthy-Async");
+            info.DecreaseIndentationLevel();
         }
 
         private async Task DoItInAsyncInNewThreadButConfigureAwaitFalse()
         {
+            string currentMethodName = nameof(DoItInAsyncInNewThread);
             var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "AsyncInNewThreadButConfigureAwaitFalse" };
             var lenghtyStuff = new LengthyStuff();
 
-            await lenghtyStuff.DoItInAsyncInNewThread(info, false).ConfigureAwait(false);
+            info.IncreaseIndentationLevel();
+
+            info.Log($"Begin of {currentMethodName} before DoLengthy-Async");
+            var task = Task.Run(() => lenghtyStuff.DoItInAsync(info, false)).ConfigureAwait(false);
+            info.Log($"In {currentMethodName} before awaiting DoLengthy-Async");
+            await task;
+            info.Log($"End of {currentMethodName} after awaiting DoLengthy-Async");
+            info.DecreaseIndentationLevel();
         }
     }
 }
