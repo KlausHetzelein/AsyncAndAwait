@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -16,6 +17,8 @@ namespace WinFormsClient
 
         private CancellationTokenSource _cts;
         private delegate Task TestMethod();
+        private bool _addSeparator = true;
+
         private class TestCase
         {
             public string Description { get; set; }
@@ -50,6 +53,7 @@ namespace WinFormsClient
 
         private void LogIt(string msg)
         {
+            _addSeparator = true;
             if (!UiLoggingEnabled)
             {
                 return;
@@ -67,6 +71,15 @@ namespace WinFormsClient
             {
                 tbInfo.AppendText(newText);
                 tbInfo.Update();
+            }
+        }
+
+        private void AppendSeparatorIfNotYetDone()
+        {
+            if (!cbClearList.Checked && _addSeparator)
+            {
+                LogIt(new StringBuilder().Append('-', 100).ToString());
+                _addSeparator = false;
             }
         }
 
@@ -102,24 +115,47 @@ namespace WinFormsClient
             Close();
         }
 
-        private async void btnRunTest_Click(object sender, EventArgs e)
+        private void SetButtonStatesWhenWorking()
         {
             btnCancel.Enabled = true;
             btnRunTest.Enabled = false;
+            btnExit.Enabled = false;
+        }
+        private void SetButtonStatesToDefault()
+        {
+            btnCancel.Enabled = false;
+            btnRunTest.Enabled = true;
+            btnExit.Enabled = true;
+        }
 
-            if (cbClearList.CheckState == CheckState.Checked)
+        private async void btnRunTest_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                SetButtonStatesWhenWorking();
+                AppendSeparatorIfNotYetDone();
+                ClearListIfChecked();
+
+                int index = cbTestCases.SelectedIndex;
+                TestCase tc = _testCases[index];
+                LogIt($"Awaiting <{tc.Description}> with <{tc.SimulatedWorkInMillis}>ms of simulated work...");
+                await tc.Method();
+                LogIt($"Back from awaiting <{tc.Description}>");
+
+                AppendSeparatorIfNotYetDone();
+            }
+            finally
+            {
+                SetButtonStatesToDefault();
+            }
+        }
+
+        private void ClearListIfChecked()
+        {
+            if (cbClearList.Checked)
             {
                 tbInfo.Clear();
             }
-
-            int index = cbTestCases.SelectedIndex;
-            TestCase tc = _testCases[index];
-            LogIt($"Starting <{tc.Description}> with <{tc.SimulatedWorkInMillis}>ms of simulated work...");
-            await tc.Method();
-            LogIt($"Back from <{tc.Description}>");
-
-            btnRunTest.Enabled = true;
-            btnCancel.Enabled = false;
         }
 
         private async Task<bool> HandleLongRunningTask()
@@ -130,6 +166,8 @@ namespace WinFormsClient
             _cts = new CancellationTokenSource();
             var info = new InfoObject { Logger = LogIt, ThrowIfCancellingRequesting = true, TestCase = "CancellationToken", MillisToSleep = GetSimulatedWorkInMillis() };
             var lenghtyStuff = new LengthyStuff();
+
+            info.IncreaseIndentationLevel();
 
             int testVariant = GetTestVariant();
             if (testVariant == TV_LONG_RUNNING_CANCELED_BEFORE_START)
@@ -177,6 +215,7 @@ namespace WinFormsClient
             }
 
             info.Log($"In {currentMethodName} Task.State <{task?.Status}>, Result: <{result}>");
+            info.DecreaseIndentationLevel();
             return result;
         }
 
@@ -186,6 +225,8 @@ namespace WinFormsClient
             var lenghtyStuff = new LengthyStuff();
 
             lenghtyStuff.DoItInSync(info);
+
+            // in order to match delegate
             return Task.Delay(1);
         }
 
@@ -208,7 +249,7 @@ namespace WinFormsClient
 
         private async Task DoItWithAsyncNoAwaitButConfigureAwaitFalse()
         {
-            var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "AsyncNoAwaitButConfigureAwaitFalse" };
+            var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "NoAwaitButConfigureAwait" };
             var lenghtyStuff = new LengthyStuff();
 
             lenghtyStuff.DoItInAsync(info, true).Wait();

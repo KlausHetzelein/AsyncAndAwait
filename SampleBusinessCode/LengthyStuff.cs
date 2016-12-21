@@ -9,24 +9,29 @@ namespace SampleBusinessCode
         public void DoItInSync(InfoObject info)
         {
             string currentMethodName = nameof(DoItInSync);
+            info.IncreaseIndentationLevel();
 
             var lenghtyStuff = new LengthyStuff();
 
-            info.Log($"TestCase: {currentMethodName}");
-            bool done = lenghtyStuff.DoLenghtyOperation(info);
-            info.Log($"TestCase: {currentMethodName} after calling DoLenghtyOperation");
+            info.Log($"Begin of {currentMethodName} before calling DoLenghty-Sync");
+            lenghtyStuff.DoLenghtyOperation(info);
+            info.Log($"End of {currentMethodName} after calling DoLenghty-Sync");
+
+            info.DecreaseIndentationLevel();
         }
 
         public async Task<bool> DoItInAsync(InfoObject info, bool configureAwait = false)
         {
             string currentMethodName = nameof(DoItInAsync);
+            info.IncreaseIndentationLevel();
             var lenghtyStuff = new LengthyStuff();
 
-            info.Log($"TestCase: {currentMethodName} before calling DoLengthyOperation...", true);
+            info.Log($"Begin of {currentMethodName} before calling DoLengthy-Async");
             var task = lenghtyStuff.DoLenghtyOperationAsync(info, configureAwait);
-            info.Log($"TestCase: {currentMethodName} after calling DoLengthyOperation...");
 
             // perhaps you can do something before you need result from async-method
+            info.Log($"In {currentMethodName} after calling DoLengthy-Async, but before awaiting it...");
+
 
             // but now need result form task
             if (configureAwait)
@@ -38,37 +43,47 @@ namespace SampleBusinessCode
                 await task;
             }
 
+            info.Log($"End of {currentMethodName} after awaiting DoLengthy-Async...");
+            info.DecreaseIndentationLevel();
+
             return task.Result;
         }
 
         public async Task DoItInAsyncInNewThread(InfoObject info)
         {
             string currentMethodName = nameof(DoItInAsyncInNewThread);
+            info.IncreaseIndentationLevel();
             var lenghtyStuff = new LengthyStuff();
 
-            info.Log($"TestCase: {currentMethodName} before DoLenghty", true);
+            info.Log($"Begin of {currentMethodName} before DoLenghty-Async in new Thread");
             var task = Task.Run(() => lenghtyStuff.DoLenghtyOperationAsync(info));
 
-            // but now need result form task
-            info.Log($"TestCase: {currentMethodName} after DoLenghty, but before await");
+            info.Log($"In {currentMethodName} after DoLenghty, but before await");
             await task;
-            info.Log($"TestCase: {currentMethodName} after await");
+            info.Log($"End of {currentMethodName} after await of DoLenghty-Async in new Thread");
+
+            info.DecreaseIndentationLevel();
             bool result = task.Result;
         }
 
         private bool DoLenghtyOperation(InfoObject info)
         {
+            info.IncreaseIndentationLevel();
             string currentMethodName = nameof(DoLenghtyOperation);
 
-            info.Log($"In {currentMethodName}, before Sleep");
+            info.Log($"Begin of {currentMethodName}, before Thread.Sleep");
             Thread.Sleep(info.MillisToSleep);
-            info.Log($"In {currentMethodName}, after Sleep");
+            info.Log($"End of {currentMethodName}, after Thread.Sleep");
 
+            info.DecreaseIndentationLevel();
             return true;
         }
         public async Task<bool> DoLenghtyOperationAsyncWithCancellationToken(InfoObject info, CancellationToken ct)
         {
+            info.IncreaseIndentationLevel();
             string currentMethodName = nameof(DoLenghtyOperationAsyncWithCancellationToken);
+
+            info.Log($"Begin of {currentMethodName}, at start");
 
             if (ct.IsCancellationRequested)
             {
@@ -76,22 +91,26 @@ namespace SampleBusinessCode
 
                 if (info.ThrowIfCancellingRequesting)
                 {
-                    info.Log($"In {currentMethodName}, throwing ThrowIfCancellingRequested...");
+                    info.Log($"End of {currentMethodName}, throwing ThrowIfCancellingRequested...");
+                    info.DecreaseIndentationLevel();
                     ct.ThrowIfCancellationRequested();
                 }
                 else
                 {
-                    info.Log($"In {currentMethodName}, just leaving with false...");
+                    info.Log($"End of {currentMethodName}, just leaving with false...");
+                    info.DecreaseIndentationLevel();
                     return false;
                 }
             }
 
             for (int i = 0; i < info.IterationsToSimulateWork; i++)
             {
-                info.Log($"In {currentMethodName} - run <{i + 1}> before Sleep");
+                info.Log($"In {currentMethodName} - run <{i + 1}> before awaiting Task.Delay()");
 
+                info.DecreaseIndentationLevel();
                 // simulate work
                 await Task.Delay(info.MillisToSleep);
+                info.IncreaseIndentationLevel();
 
                 if (ct.IsCancellationRequested)
                 {
@@ -99,12 +118,14 @@ namespace SampleBusinessCode
 
                     if (info.ThrowIfCancellingRequesting)
                     {
-                        info.Log($"In {currentMethodName}, throwing ThrowIfCancellingRequested...");
+                        info.Log($"End of {currentMethodName}, throwing ThrowIfCancellingRequested...");
+                        info.DecreaseIndentationLevel();
                         ct.ThrowIfCancellationRequested();
                     }
                     else
                     {
-                        info.Log($"In {currentMethodName}, cancelling, just leaving with false...");
+                        info.Log($"End of {currentMethodName}, cancelling, just leaving with false...");
+                        info.DecreaseIndentationLevel();
                         return false;
                     }
                 }
@@ -112,15 +133,18 @@ namespace SampleBusinessCode
                 info.Log($"In {currentMethodName} - run <{i + 1}> after Sleep");
             }
 
-            info.Log($"In {currentMethodName}, reached end of method, returning true...");
+            info.Log($"End of {currentMethodName}, reached end of method, returning true...");
+            info.DecreaseIndentationLevel();
             return true;
         }
 
         private async Task<bool> DoLenghtyOperationAsync(InfoObject info, bool configureAwait = false)
         {
+            info.IncreaseIndentationLevel();
             string currentMethodName = nameof(DoLenghtyOperationAsync);
 
-            info.Log($"In {currentMethodName}, before Sleep");
+            info.Log($"Begin of {currentMethodName}, before await Task.Delay");
+            info.DecreaseIndentationLevel();
             if (configureAwait)
             {
                 await Task.Delay(info.MillisToSleep).ConfigureAwait(false);
@@ -129,29 +153,36 @@ namespace SampleBusinessCode
             {
                 await Task.Delay(info.MillisToSleep);
             }
-            info.Log($"In {currentMethodName}, after Sleep");
+            info.IncreaseIndentationLevel();
+            info.Log($"End of {currentMethodName}, after awaiting Task.Delay");
 
+            info.DecreaseIndentationLevel();
             return true;
         }
 
         public async Task<bool> DoLenghtyOpAsyncWithCtInNewThread(InfoObject info, CancellationToken ct)
         {
+            info.IncreaseIndentationLevel();
             string currentMethodName = nameof(DoLenghtyOpAsyncWithCtInNewThread);
             Task<bool> task = null;
 
-            info.Log($"In {currentMethodName}, before starting Task.Run");
+            info.Log($"Begin of {currentMethodName}, before starting Task.Run of DoLenghty-Async with CT");
             try
             {
                 task = Task.Run(() => DoLenghtyOperationAsyncWithCancellationToken(info, ct), ct);
+                info.Log($"In {currentMethodName}, before awaiting Task.Run of DoLenghty-Async with CT");
                 await task;
+                info.Log($"In {currentMethodName}, after awaiting Task.Run of DoLenghty-Async with CT");
             }
             catch (OperationCanceledException)
             {
-                info.Log($"In {currentMethodName} received OperationCanceledException, Task.State <{task?.Status}>, rethrow");
+                info.Log($"End of {currentMethodName} received OperationCanceledException, Task.State <{task?.Status}>, rethrow");
+                info.DecreaseIndentationLevel();
                 throw;
             }
 
-            info.Log($"In {currentMethodName} Task.State <{task?.Status}>, Result: <{task.Result}>");
+            info.Log($"End of {currentMethodName} Task.State <{task?.Status}>, Result: <{task.Result}>");
+            info.DecreaseIndentationLevel();
             return task.Result;
         }
     }
