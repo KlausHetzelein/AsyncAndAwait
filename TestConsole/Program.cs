@@ -31,7 +31,7 @@ namespace TestConsole
             task.Wait();
             AppendSeparator();
 
-            DoItWithAsyncNoAwaitButWaitMayBlock().Wait();
+            DoItWithAsyncNoAwaitButWaitDoesNotBlockInConsole().Wait();
             AppendSeparator();
 
             DoItWithAsyncNoAwaitButConfigureAwaitFalse().Wait();
@@ -68,10 +68,10 @@ namespace TestConsole
             await lenghtyStuff.DoItInAsync(info);
             info.Log($"End of <{currentMethodName}>");
         }
-        static async Task DoItWithAsyncNoAwaitButWaitMayBlock()
+        static async Task DoItWithAsyncNoAwaitButWaitDoesNotBlockInConsole()
         {
-            string currentMethodName = nameof(DoItWithAsyncNoAwaitButWaitMayBlock);
-            var info = new InfoObject { MillisToSleep = 1246, TestCase = "AsyncNoAwaitMayBlock" };
+            string currentMethodName = nameof(DoItWithAsyncNoAwaitButWaitDoesNotBlockInConsole);
+            var info = new InfoObject { MillisToSleep = 1246, TestCase = "AsyncNoAwaitNonBlockingInConsole" };
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"Start of <{currentMethodName}>");
@@ -86,7 +86,7 @@ namespace TestConsole
             var lenghtyStuff = new LengthyStuff();
 
             info.Log($"Start of <{currentMethodName}>");
-            lenghtyStuff.DoItInAsync(info, true).Wait();
+            lenghtyStuff.TaskDelay(info, false).Wait();
             info.Log($"End of <{currentMethodName}>");
         }
 

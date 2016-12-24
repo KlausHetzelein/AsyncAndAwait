@@ -35,10 +35,10 @@ namespace WinFormsClient
         {
             _testCases.Add(new TestCase { Description = "Synchronous Call, UI not responsive", Method = DoItInSync });
             _testCases.Add(new TestCase { Description = "Async and Await, UI responsive", Method = DoItWithAsyncAndAwait });
-            _testCases.Add(new TestCase { Description = "Async No Await - Will Block", Method = DoItWithAsyncNoAwaitButWaitMayBlock });
-            _testCases.Add(new TestCase { Description = "Async No Await, but ConfigureAwait False", Method = DoItWithAsyncNoAwaitButConfigureAwaitFalse });
-            _testCases.Add(new TestCase { Description = "Async with new Thread", Method = DoItInAsyncInNewThread });
+            _testCases.Add(new TestCase { Description = "Async via Task.Run (in new Thread)", Method = DoSyncCallViaTaskRunAndAsync });
             _testCases.Add(new TestCase { Description = "Async with new Thread, but ConfigureAwait False", Method = DoItInAsyncInNewThreadButConfigureAwaitFalse });
+            _testCases.Add(new TestCase { Description = "Async No Await, but Wait - Will Block", Method = DoItWithAsyncNoAwaitButWaitWillBlockOnUiThread });
+            _testCases.Add(new TestCase { Description = "Async No Await, but Wait with ConfigureAwait False", Method = DoItWithAsyncNoAwaitButConfigureAwaitFalse });
             _testCases.Add(new TestCase { Description = "Cancelable longrunning Async", Method = HandleLongRunningTask, VariantInTest = TV_LONG_RUNNING_JUST_AWAIT, SimulatedWorkInMillis = 2000 });
             _testCases.Add(new TestCase { Description = "Cancelable longrunning new Thread", Method = HandleLongRunningTask, VariantInTest = TV_LONG_RUNNING_AWAIT_AND_TASK_RUN, SimulatedWorkInMillis = 2000 });
             _testCases.Add(new TestCase { Description = "Cancelable longrunning new Thread and exc-handling", Method = HandleLongRunningTask, VariantInTest = TV_LONG_RUNNING_AWAIT_AND_TASK_RUN_WITH_EXCEPTION_HANDLING, SimulatedWorkInMillis = 2000 });
@@ -228,7 +228,7 @@ namespace WinFormsClient
             lenghtyStuff.DoItInSync(info);
 
             // in order to match delegate
-            return Task.Delay(1);
+            return Task.Delay(0);
         }
 
         private async Task DoItWithAsyncAndAwait()
@@ -240,9 +240,9 @@ namespace WinFormsClient
         }
 
         // that blocks ui-thread
-        private async Task DoItWithAsyncNoAwaitButWaitMayBlock()
+        private async Task DoItWithAsyncNoAwaitButWaitWillBlockOnUiThread()
         {
-            var info = new InfoObject { Logger = LogIt, MillisToSleep = 2000, TestCase = "AsyncNoAwaitMayBlock" };
+            var info = new InfoObject { Logger = LogIt, MillisToSleep = 2000, TestCase = "AsyncNoAwaitWillBlockInUI-Thread" };
             var lenghtyStuff = new LengthyStuff();
 
             lenghtyStuff.DoItInAsync(info).Wait();
@@ -250,41 +250,47 @@ namespace WinFormsClient
 
         private async Task DoItWithAsyncNoAwaitButConfigureAwaitFalse()
         {
+            string currentMethodName = nameof(DoItWithAsyncNoAwaitButConfigureAwaitFalse);
             var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "NoAwaitButConfigureAwaitFalse" };
             var lenghtyStuff = new LengthyStuff();
 
-            lenghtyStuff.DoItInAsync(info, false).Wait();
+            info.IncreaseIndentationLevel();
+            info.Log($"Start of <{currentMethodName}> before hard waiting on Task.Delay");
+            lenghtyStuff.TaskDelay(info, false).Wait();
+            info.Log($"End of <{currentMethodName}> back from Task.Delay().Wait()");
+            info.DecreaseIndentationLevel();
         }
 
-        private async Task DoItInAsyncInNewThread()
+        private async Task DoSyncCallViaTaskRunAndAsync()
         {
-            string currentMethodName = nameof(DoItInAsyncInNewThread);
-            var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "AsyncInNewThread" };
+            string currentMethodName = nameof(DoSyncCallViaTaskRunAndAsync);
+            var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "AsyncViaTaskRun" };
             var lenghtyStuff = new LengthyStuff();
 
             info.IncreaseIndentationLevel();
 
-            info.Log($"Begin of {currentMethodName} before DoLengthy-Async");
-            var task = Task.Run(() => lenghtyStuff.DoItInAsync(info));
-            info.Log($"In {currentMethodName} before awaiting DoLengthy-Async");
+            info.Log($"Begin of {currentMethodName} before calling DoItInSync");
+            var task = Task.Run(() => lenghtyStuff.DoItInSync(info));
+            info.Log($"In {currentMethodName} before awaiting DoItInSync");
             await task;
-            info.Log($"End of {currentMethodName} after awaiting DoLengthy-Async");
+            info.Log($"End of {currentMethodName} after awaiting DoItInSync");
+
             info.DecreaseIndentationLevel();
         }
 
         private async Task DoItInAsyncInNewThreadButConfigureAwaitFalse()
         {
-            string currentMethodName = nameof(DoItInAsyncInNewThread);
+            string currentMethodName = nameof(DoSyncCallViaTaskRunAndAsync);
             var info = new InfoObject { Logger = LogIt, MillisToSleep = GetSimulatedWorkInMillis(), TestCase = "AsyncInNewThreadButConfigureAwaitFalse" };
             var lenghtyStuff = new LengthyStuff();
 
             info.IncreaseIndentationLevel();
 
-            info.Log($"Begin of {currentMethodName} before DoLengthy-Async");
-            var task = Task.Run(() => lenghtyStuff.DoItInAsync(info, false)).ConfigureAwait(false);
-            info.Log($"In {currentMethodName} before awaiting DoLengthy-Async");
+            info.Log($"Begin of {currentMethodName} before Task.Delay");
+            var task = Task.Run(() => lenghtyStuff.TaskDelay(info, false));
+            info.Log($"In {currentMethodName} before awaiting Task-Delay");
             await task;
-            info.Log($"End of {currentMethodName} after awaiting DoLengthy-Async");
+            info.Log($"End of {currentMethodName} after awaiting Task.Delay");
             info.DecreaseIndentationLevel();
         }
     }
